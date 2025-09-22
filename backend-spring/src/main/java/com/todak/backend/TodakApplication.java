@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class TodakApplication {
 
 	public static void main(String[] args) {
+		System.out.println();
 		SpringApplication.run(TodakApplication.class, args);
 	}
 
