@@ -1,5 +1,9 @@
 package com.todak.backend.domain.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +18,7 @@ import com.todak.backend.domain.entity.channel.ChannelType;
 import com.todak.backend.domain.entity.message.Message;
 import com.todak.backend.domain.entity.message.dto.CreateMessageRequest;
 import com.todak.backend.domain.entity.message.dto.CreateMessageResponse;
+import com.todak.backend.domain.entity.message.dto.GetMessageResponse;
 import com.todak.backend.domain.entity.user.User;
 import com.todak.backend.domain.entity.user.UserRole;
 import com.todak.backend.domain.entity.user.dto.UserLoginResponse;
@@ -22,7 +27,6 @@ import com.todak.backend.domain.repository.MessageRepository;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +47,7 @@ public class MessageService {
 
 		Channel channel = channelService.findById(channelId);
 		if (channel.getStatus().equals(ChannelStatus.UNACTIVATE)) {
-			throw new RuntimeException(channelId + " 채널이 비활성화!! 메세지를 보낼 수 없습니다.");
+			throw new RuntimeException(channelId + " 채널이 비활성화!! 메세지 보낼 수 없습니다.");
 		}
 
 		Message savedMessage = messageRepository.save(Message.builder()
@@ -67,6 +71,21 @@ public class MessageService {
 				throw new RuntimeException(e);
 			}
 		}).start();
+	}
+
+	@Transactional(readOnly = true)
+	public Page<GetMessageResponse> getMessages(HttpSession session, Long channelId, int page, int size) {
+		var sessionUserResponse = (UserLoginResponse)session.getAttribute("user");
+		User user = userService.findById(sessionUserResponse.getUserId());
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
+		Channel channel = channelService.findById(channelId);
+
+		if (!channel.getUser().equals(user) && !channel.getExpert().equals(user)) {
+			throw new RuntimeException("메시지를 조회 할 권한이 없습니다.");
+		}
+
+		return messageRepository.findByChannelId(channelId, pageable)
+			.map(GetMessageResponse::from);
 	}
 
 	private void chatBotMessage(String message, Long channelId) {
