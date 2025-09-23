@@ -17,6 +17,10 @@ from contextlib import asynccontextmanager
 from module.model import load_models, predict
 from module.chatbot import get_chatbot_chain
 from module.wordcount import count_tokens
+import logging
+# 로거 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("my_app")
 
 # lifespan으로 모델 로드 관리
 @asynccontextmanager
@@ -34,8 +38,9 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
 
-@app.get("/api/v1/chatbot", response_model=ChatResponse)
+@app.post("/api/v1/chatbot", response_model=ChatResponse)
 def chat(req: ChatRequest):
+    logger.info(f"호출내용 : {req.message}")
     response = get_chatbot_chain.run(message=req.message)
     return ChatResponse(reply=response)
 """

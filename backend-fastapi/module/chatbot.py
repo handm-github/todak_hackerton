@@ -23,7 +23,7 @@ def get_chatbot_chain():
     ])
 
     # 대화 내용을 기억하는 메모리
-    memory = ConversationBufferWindowMemory(k=2
+    memory = ConversationBufferWindowMemory(k=2,
         memory_key="chat_history", 
         return_messages=True
     )
