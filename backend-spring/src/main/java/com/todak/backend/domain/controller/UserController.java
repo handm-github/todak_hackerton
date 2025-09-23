@@ -6,8 +6,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.todak.backend.domain.entity.user.dto.UserLoginRequest;
+import com.todak.backend.domain.entity.user.dto.UserLoginResponse;
+import com.todak.backend.domain.entity.user.dto.UserSignupRequest;
 import com.todak.backend.domain.service.UserService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -17,9 +21,20 @@ public class UserController {
 
 	private final UserService userService;
 
-
 	@PostMapping("/users")
-	public ResponseEntity<?> signUp(@RequestBody ) {
+	public ResponseEntity<?> signUp(@RequestBody UserSignupRequest request) {
+		userService.signUp(request);
+		return ResponseEntity.ok("회원 가입 성공");
+	}
 
+	@PostMapping("/users/login")
+	public ResponseEntity<?> login(@RequestBody UserLoginRequest request, HttpSession session) {
+		try {
+			UserLoginResponse response = userService.login(request);
+			session.setAttribute("user", response);
+			return ResponseEntity.ok(response);
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
 }
