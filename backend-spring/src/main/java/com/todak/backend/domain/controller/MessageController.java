@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,9 +26,9 @@ public class MessageController {
 
 	@MessageMapping("/channels/{channelId}/messages")
 	public void sendMessage(@DestinationVariable Long channelId, @Payload CreateMessageRequest request,
-		HttpSession session) {
+		SimpMessageHeaderAccessor headerAccessor) {
 
-		messageService.saveMessage(channelId, session, request);
+		messageService.saveMessage(channelId, headerAccessor, request);
 	}
 
 	@GetMapping("/api/v1/channels/{channelId}/messages")

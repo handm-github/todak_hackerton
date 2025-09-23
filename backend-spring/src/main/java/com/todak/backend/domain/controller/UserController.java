@@ -1,5 +1,7 @@
 package com.todak.backend.domain.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.todak.backend.domain.entity.user.dto.CounselorUserResponse;
 import com.todak.backend.domain.entity.user.dto.UserLoginRequest;
 import com.todak.backend.domain.entity.user.dto.UserLoginResponse;
 import com.todak.backend.domain.entity.user.dto.UserSignupRequest;
@@ -58,11 +61,15 @@ public class UserController {
 
 	@GetMapping("/users/fortune/daily")
 	public ResponseEntity<?> fortune(HttpSession session) {
-		String fortune = (String) session.getAttribute("dailyFortune");
-		if (fortune == null) {
-			fortune = userService.fortune();
+			String fortune = userService.fortune();
 			session.setAttribute("dailyFortune", fortune);
-		}
+
 		return ResponseEntity.ok(fortune);
+	}
+
+	@GetMapping("/experts")
+	public ResponseEntity<?> getExperts(HttpSession session) {
+		List<CounselorUserResponse> response = userService.getExperts(session);
+		return ResponseEntity.ok(response);
 	}
 }

@@ -1,7 +1,5 @@
 package com.todak.backend.domain.service;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -84,7 +82,7 @@ public class ChannelService {
 	public void findByUserAndExpert(User user, User expert) {
 		channelRepository.findByUserAndExpert(user, expert).ifPresent(channel -> {
 			if (channel.getStatus().equals(ChannelStatus.ACTIVATE)) {
-				throw new RuntimeException(channel.getId() + "번 채널이 이미 존재 합니다.");
+				throw new RuntimeException(channel.getId() + " 번 채널이 이미 존재 합니다.");
 			}
 		});
 	}

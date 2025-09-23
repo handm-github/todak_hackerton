@@ -1,9 +1,12 @@
 package com.todak.backend.domain.service;
 
+import java.util.Objects;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,8 +44,9 @@ public class MessageService {
 	private final SimpMessageSendingOperations messagingTemplate;
 
 	@Transactional
-	public void saveMessage(Long channelId, HttpSession session, CreateMessageRequest request) {
-		var sessionUserResponse = (UserLoginResponse)session.getAttribute("user");
+	public void saveMessage(Long channelId, SimpMessageHeaderAccessor session, CreateMessageRequest request) {
+		UserLoginResponse sessionUserResponse =
+			(UserLoginResponse) Objects.requireNonNull(session.getSessionAttributes()).get("user");
 		User user = userService.findById(sessionUserResponse.getUserId());
 
 		Channel channel = channelService.findById(channelId);
