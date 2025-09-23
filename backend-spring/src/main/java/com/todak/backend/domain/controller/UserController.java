@@ -1,6 +1,7 @@
 package com.todak.backend.domain.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,5 +37,22 @@ public class UserController {
 		} catch (RuntimeException e) {
 			return ResponseEntity.badRequest().body(e.getMessage());
 		}
+	}
+
+	@GetMapping("/users/info")
+	public ResponseEntity<?> details(HttpSession session) {
+		UserLoginResponse userResponse = (UserLoginResponse)session.getAttribute("user");
+		// 세션 정보가 있는지 확인
+		if (userResponse != null) {
+			return ResponseEntity.ok(userResponse);
+		} else {
+			return ResponseEntity.status(401).build();
+		}
+	}
+
+	@PostMapping("/users/logout")
+	public ResponseEntity<?> logout(HttpSession session) {
+		session.removeAttribute("user");
+		return ResponseEntity.ok("로그아웃 성공");
 	}
 }
