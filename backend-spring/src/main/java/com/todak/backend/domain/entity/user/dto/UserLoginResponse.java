@@ -13,12 +13,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class UserLoginResponse {
+	private Long userId;
 	private String username;
 	private UserRole role;
 	private String nick;
 
 	public static UserLoginResponse from(User user) {
 		return UserLoginResponse.builder()
+			.userId(user.getId())
 			.username(user.getUsername())
 			.nick(user.getNick())
 			.role(user.getRole())

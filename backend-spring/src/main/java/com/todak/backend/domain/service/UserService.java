@@ -43,4 +43,8 @@ public class UserService {
 	public User findByUser(String username, String pw) {
 		return userRepository.findByUsernameAndPw(username, pw).orElseThrow(()-> new RuntimeException("아이디 또는 비밀번호가 틀렸습니다."));
 	}
+
+	public User findById(Long id) {
+		return userRepository.findById(id).orElseThrow(()-> new RuntimeException("존재 하지 않는 유저입니다."));
+	}
 }
