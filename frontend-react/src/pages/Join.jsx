@@ -1,6 +1,7 @@
-// src/pages/Join.jsx - 회원가입 페이지 (비밀번호 6자리 제한 제거)
+// src/pages/Join.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 /**
  * JoinPage 컴포넌트 - 사용자 회원가입 화면
@@ -46,7 +47,7 @@ const JoinPage = () => {
       newErrors.id = '아이디는 영문자와 숫자만 사용 가능합니다.';
     }
 
-    // 비밀번호 검사 (길이 제한 제거)
+    // 비밀번호 검사
     if (!formData.password.trim()) {
       newErrors.password = '비밀번호를 입력해주세요.';
     }
@@ -73,25 +74,23 @@ const JoinPage = () => {
   const handleJoin = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
     
     try {
-      // TODO: 실제 회원가입 API 호출
-      // const response = await joinAPI(formData);
-      
-      // 임시 회원가입 로직 (실제 구현시 제거)
-      await new Promise(resolve => setTimeout(resolve, 1500)); // 로딩 시뮬레이션
-      
-      console.log('회원가입 데이터:', {
-        id: formData.id,
-        nickname: formData.nickname
-      });
-      
-      // 회원가입 성공 알림
+      // 백엔드 DTO(UserSignupRequest) 기준으로 데이터 매핑
+      const requestData = {
+        username: formData.id,
+        pw: formData.password,
+        nick: formData.nickname
+      };
+
+      const response = await axios.post(
+        'http://localhost:8080/api/v1/users',
+        requestData
+      );
+
+      console.log('회원가입 성공:', response.data);
       alert('회원가입이 완료되었습니다!');
       
       // 로그인 페이지로 이동
@@ -99,9 +98,10 @@ const JoinPage = () => {
       
     } catch (error) {
       console.error('회원가입 실패:', error);
-      setErrors({ 
-        general: '회원가입에 실패했습니다. 다시 시도해주세요.' 
-      });
+
+      // 서버에서 반환한 메시지 사용 가능
+      const message = error.response?.data || '회원가입에 실패했습니다. 다시 시도해주세요.';
+      setErrors({ general: message });
     } finally {
       setIsLoading(false);
     }
@@ -123,9 +123,9 @@ const JoinPage = () => {
     <div className="center-container">
       <div className="auth-card">
 
-        {/* 회원가입 폼 */}
+        <h2>회원가입</h2>
+
         <form onSubmit={handleJoin} className="auth-form">
-          
           {/* 전체 에러 메시지 */}
           {errors.general && (
             <div className="error-text text-center">
@@ -148,9 +148,7 @@ const JoinPage = () => {
               autoComplete="username"
               autoFocus
             />
-            {errors.id && (
-              <div className="error-text">{errors.id}</div>
-            )}
+            {errors.id && <div className="error-text">{errors.id}</div>}
           </div>
           
           {/* 비밀번호 입력 */}
@@ -167,9 +165,7 @@ const JoinPage = () => {
               maxLength={50}
               autoComplete="new-password"
             />
-            {errors.password && (
-              <div className="error-text">{errors.password}</div>
-            )}
+            {errors.password && <div className="error-text">{errors.password}</div>}
           </div>
 
           {/* 비밀번호 확인 입력 */}
@@ -186,9 +182,7 @@ const JoinPage = () => {
               maxLength={50}
               autoComplete="new-password"
             />
-            {errors.confirmPassword && (
-              <div className="error-text">{errors.confirmPassword}</div>
-            )}
+            {errors.confirmPassword && <div className="error-text">{errors.confirmPassword}</div>}
           </div>
           
           {/* 닉네임 입력 */}
@@ -204,9 +198,7 @@ const JoinPage = () => {
               disabled={isLoading}
               maxLength={10}
             />
-            {errors.nickname && (
-              <div className="error-text">{errors.nickname}</div>
-            )}
+            {errors.nickname && <div className="error-text">{errors.nickname}</div>}
           </div>
           
           {/* 회원가입 버튼 */}
@@ -228,11 +220,6 @@ const JoinPage = () => {
         >
           ← 로그인으로 돌아가기
         </button>
-
-        {/* 안내 메시지 */}
-        <div className="text-center" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-          {/* <p>모든 필드를 올바르게 입력해주세요</p> */}
-        </div>
       </div>
     </div>
   );
