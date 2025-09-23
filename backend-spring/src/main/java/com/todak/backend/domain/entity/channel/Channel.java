@@ -42,4 +42,8 @@ public class Channel extends Timestamped {
 	private User expert;
 
 	private ChannelStatus status;
+
+	public void deactivate() {
+		this.status = ChannelStatus.UNACTIVATE;
+	}
 }

@@ -1,5 +1,7 @@
 package com.todak.backend.domain.service;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +65,22 @@ public class ChannelService {
 		return channelList.map(GetChannelResponse::fromChannel);
 	}
 
+	@Transactional
+	public void exitChannel(HttpSession session, Long channelId) {
+		var sessionUserResponse = (UserLoginResponse)session.getAttribute("user");
+		User user = userService.findById(sessionUserResponse.getUserId());
+
+		Long loggedInUserId = user.getId();
+
+		Channel channel = findById(channelId);
+		if (channel.getUser().getId().equals(loggedInUserId) ||
+			(channel.getExpert() != null && channel.getExpert().getId().equals(loggedInUserId))) {
+			channel.deactivate();
+		}else {
+			throw new RuntimeException("채널을 나갈 권한이 없습니다.");
+		}
+	}
+
 	public void findByUserAndExpert(User user, User expert) {
 		channelRepository.findByUserAndExpert(user, expert).ifPresent(channel -> {
 			if (channel.getStatus().equals(ChannelStatus.ACTIVATE)) {
@@ -70,5 +88,10 @@ public class ChannelService {
 			}
 		});
 	}
+
+	public Channel findById(Long channelId) {
+		return channelRepository.findById(channelId).orElseThrow(()->new RuntimeException("채널이 존재하지 않습니다."));
+	}
+
 
 }
