@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.memory import ConversationBufferMemory
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationChain
 
 import os
@@ -19,11 +19,11 @@ def get_chatbot_chain():
     """
     # 프롬프트
     prompt = ChatPromptTemplate.from_messages([
-        ("system", template), ("human", "{input}")
+        ("system", template), ("ai", "{chat_history}"), ("human", "{message}")
     ])
 
     # 대화 내용을 기억하는 메모리
-    memory = ConversationBufferMemory(
+    memory = ConversationBufferWindowMemory(k=2
         memory_key="chat_history", 
         return_messages=True
     )
