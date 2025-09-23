@@ -2,6 +2,7 @@ package com.todak.backend.domain.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.todak.backend.domain.entity.user.User;
 import com.todak.backend.domain.entity.user.UserRole;
@@ -10,13 +11,17 @@ import com.todak.backend.domain.entity.user.dto.UserLoginResponse;
 import com.todak.backend.domain.entity.user.dto.UserSignupRequest;
 import com.todak.backend.domain.repository.UserRepository;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
 	private final UserRepository userRepository;
+
+	private final WebClient webClient;
 
 	@Transactional
 	public void signUp(UserSignupRequest request) {
@@ -34,6 +39,15 @@ public class UserService {
 		return UserLoginResponse.from(user);
 	}
 
+	public String fortune() {
+
+		return webClient.get()
+			.uri("/api/v1/users/fortune/daily") // 포춘 쿠키 API 경로
+			.retrieve()
+			.bodyToMono(String.class)
+			.block();
+	}
+
 	public void existsByUsername(String username) {
 		if (userRepository.existsByUsername(username)) {
 			throw new RuntimeException("이미 존재하는 유저아이디입니다.");
@@ -47,4 +61,6 @@ public class UserService {
 	public User findById(Long id) {
 		return userRepository.findById(id).orElseThrow(()-> new RuntimeException("존재 하지 않는 유저입니다."));
 	}
+
+
 }

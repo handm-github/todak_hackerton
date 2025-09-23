@@ -55,4 +55,14 @@ public class UserController {
 		session.removeAttribute("user");
 		return ResponseEntity.ok("로그아웃 성공");
 	}
+
+	@GetMapping("/users/fortune/daily")
+	public ResponseEntity<?> fortune(HttpSession session) {
+		String fortune = (String) session.getAttribute("dailyFortune");
+		if (fortune == null) {
+			fortune = userService.fortune();
+			session.setAttribute("dailyFortune", fortune);
+		}
+		return ResponseEntity.ok(fortune);
+	}
 }
