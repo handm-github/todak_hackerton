@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.chains import ConversationChain
+from langchain.chains import LLMChain
 
 import os
 api_key = ''
@@ -29,7 +29,7 @@ def get_chatbot_chain():
     )
 
     # LLM 체인
-    chain = ConversationChain(
+    chain = LLMChain(
         llm=llm,
         prompt=prompt,
         memory=memory

@@ -41,7 +41,8 @@ class ChatResponse(BaseModel):
 @app.post("/api/v1/chatbot", response_model=ChatResponse)
 def chat(req: ChatRequest):
     logger.info(f"호출내용 : {req.message}")
-    response = get_chatbot_chain.run(message=req.message)
+    chatbot = get_chatbot_chain()
+    response = chatbot.run(message=req.message)
     return ChatResponse(reply=response)
 """
 - 응답예시{json 형식}  
