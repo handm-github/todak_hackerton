@@ -3,16 +3,10 @@ import subprocess
 import sys
 import os
 
-def install_requirements():
-    req_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path])
 
 # openai_api_key 등록(테스트용, 사용에 주의)
 
 os.environ["OPENAI_API_KEY"] = ""
-
-# 실행 시 패키지 설치
-install_requirements()
 
 # api 적용
 from fastapi import FastAPI
