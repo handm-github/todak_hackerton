@@ -9,7 +9,7 @@ def install_requirements():
 
 # openai_api_key 등록(테스트용, 사용에 주의)
 
-os.environ["OPENAI_API_KEY"] = "여기에_발급받은_키"
+os.environ["OPENAI_API_KEY"] = ""
 
 # 실행 시 패키지 설치
 install_requirements()
@@ -46,8 +46,8 @@ class ChatResponse(BaseModel):
 def chat(req: ChatRequest):
     logger.info(f"호출내용 : {req.message}")
     chatbot = get_chatbot_chain()
-    response = chatbot.run(message=req.message)
-    return ChatResponse(reply=response)
+    response = chatbot.invoke(input=req.message)
+    return ChatResponse(reply=response.content)
 """
 - 응답예시{json 형식}  
 {
@@ -57,23 +57,22 @@ def chat(req: ChatRequest):
 class TextInput(BaseModel):
     text: str
 
-@app.get("/api/v1/channels/{channelId}/reports/frequency")
+@app.post("/api/v1/channels/{channelId}/reports/frequency")
 def analyze_text(channelId: str, data: TextInput):
     # 1) 단어 카운트
     counter = count_tokens(data.text)
     token_freqs = [{"token": tok, "count": cnt} for tok, cnt in counter.most_common()]
 
     # 2) 감지 모델 예측
-    results = {}
-    for disease in ["depression", "anxiety"]:
-        results[disease] = predict(data.text, models[disease], tokenizers[disease], device)
+    depression_score = predict(data.text, models["depression"], tokenizers["depression"], device)
+    anxiety_score = predict(data.text, models["anxiety"], tokenizers["anxiety"], device)
 
     # 3) 통합 Response
     return {
         "channelId": channelId,
-        "input": data.text,
-        "tokens": token_freqs,
-        "predictions": results
+        "depression_score": str(depression_score),
+        "anxiety_score": str(anxiety_score),
+        "report": {tok["token"]: tok["count"] for tok in token_freqs}
     }
 
 """ 

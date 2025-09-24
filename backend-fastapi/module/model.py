@@ -1,60 +1,57 @@
 # api 적용
 import torch
 import torch.nn as nn
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer
+
 MODEL_REPOS = {
     "depression": "harkase/kluebert-depression",
-    "anxiety": "harkase/kluebert-anxiety"
+    "anxiety":   "harkase/kluebert-anxiety",
 }
-# 허깅페이스에서 모델 불러오기
 
-def load_models():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    models, tokenizers = {}, {}
+# --- 얇은 회귀 헤드 (인코더 위에만 얹음) ---
+class BertRegressor(nn.Module):
+    def __init__(self, base_model, out_dim=1):
+        super().__init__()
+        self.base = base_model  # AutoModel (encoder only)
+        hs = self.base.config.hidden_size
+        self.regressor = nn.Linear(hs, out_dim)
 
-    for name, repo in MODEL_REPOS.items():
-        models[name] = AutoModelForSequenceClassification.from_pretrained(repo).to(device)
-        tokenizers[name] = AutoTokenizer.from_pretrained(repo)
-        models[name].eval()
-
-    return models, tokenizers, device
-
-# 모델 정의
-class CustomBertForSequenceRegression(AutoModelForSequenceClassification):
-    def __init__(self, config):
-        super().__init__(config)
-        self.num_labels = 1
-        self.regressor = nn.Linear(config.hidden_size, self.num_labels)
-
-    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, labels=None, **kwargs):
-        outputs = self.bert(
-            input_ids,
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, **kwargs):
+        outputs = self.base(
+            input_ids=input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
             **kwargs
         )
-        sequence_output = outputs[0]
-        pooled_output = sequence_output[:, 0, :]
-        logits = self.regressor(pooled_output)
+        # BERT류면 pooler_output이 있고, 없으면 [CLS] 사용
+        if getattr(outputs, "pooler_output", None) is not None:
+            pooled = outputs.pooler_output               
+        else:
+            pooled = outputs.last_hidden_state[:, 0, :]
+        logits = self.regressor(pooled)                  
+        return logits
 
-        loss = None
-        if labels is not None:
-            loss_fct = nn.MSELoss()
-            loss = loss_fct(logits, labels)
-        return (loss, logits) if loss is not None else logits
-    
-# 유틸 함수
-def closest_integer(predictions: float): # 0~3 사이에서 가장 가까운 정수 설정
-    return min(max(round(predictions), 0), 3)
+# --- 모델/토크나이저 로딩 ---
+def load_models():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    models, tokenizers = {}, {}
+    for name, repo in MODEL_REPOS.items():
+        encoder = AutoModel.from_pretrained(repo).to(device)   # <- 인코더만!
+        model = BertRegressor(encoder, out_dim=1).to(device)
+        model.eval()
+        models[name] = model
+        tokenizers[name] = AutoTokenizer.from_pretrained(repo)
+    return models, tokenizers, device
 
-def predict(sentence: str, model, tokenizer, device): # 모델 예측
+# --- 유틸 ---
+def closest_integer(x: float):     # 0~3 클램프
+    return min(max(round(float(x)), 0), 3)
+
+def predict(sentence: str, model, tokenizer, device):
     inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True)
     inputs = {k: v.to(device) for k, v in inputs.items()}
-    model.to(device)
 
     with torch.no_grad():
-        outputs = model(**inputs)
-
-    logits = outputs[1] if isinstance(outputs, tuple) else outputs
-    pred = logits.squeeze().tolist()
+        logits = model(**inputs)           # Tensor [B, 1]
+    pred = logits.squeeze().item()         # float
     return closest_integer(pred)
