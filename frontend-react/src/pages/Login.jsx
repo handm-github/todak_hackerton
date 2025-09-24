@@ -64,8 +64,17 @@ const LoginPage = () => {
   return (
     <div className="center-container">
       <div className="auth-card">
-        <h2>로그인</h2>
-
+        {/* <h2>로그인</h2> */}
+        
+        {/* 로고 영역 */}
+        <div className="auth-header">
+          <div className="auth-logo">
+            <img src="/todak_logo.png" alt="logo" />
+            <p className="main_txt"><span>토닥임</span>이 필요한 <b>나날</b></p>
+          </div>
+        </div>
+        
+        
         <form onSubmit={handleLogin} className="auth-form">
           {errors.general && (
             <div className="error-text text-center">{errors.general}</div>
@@ -111,3 +120,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
